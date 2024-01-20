@@ -4,7 +4,7 @@ Implement a vendor-agnostic API allowing efficient handling of hardware device r
 
 # Motivation
 
-OBS's encoder stack is, to put it lightly, incredibly obtuse. Implementations of hardware encoders like NVENC which got by with gradual modifications to the (originally host-frame-only for things like x264) libobs API are now showing their age with the looming trend of clientside encodes (simulcasting).
+OBS's encoder stack is, to put it lightly, somewhat obtuse. Implementations of hardware encoders like NVENC which got by with gradual modifications to the (originally host-frame-only for things like x264) libobs API are now showing their age with the looming trend of clientside encodes (simulcasting).
 
 There is a long list of drawbacks, both user-facing and backend-facing, to the existing encoder system. With a majority of OBS users now using hardware-accelerated encoders like QSV, NVENC, and AMF instead of the older software counterparts, OBS's current support framework for these encoders imposes many pipeline inefficiencies and heavily-duplicated code. Future popularity of simulcasting is expected to only worsen this problem.
 
@@ -158,6 +158,10 @@ Writing the libobs APIs and integrating with the libobs code may end up being th
 Luckily for us, I expect the migration of existing encoders to be less difficult, because:
 - A notable portion of code should be able to be, to an extent, copy-pasted into the new descrete implementations of encoder/hardware devices
 - Given the similarity of this API to FFmpeg's `AVHWDeviceContext` API, along with our existing reliance on FFmpeg libraries, much of the remaining functionality (host to device DMA, device memory management) can be almost-directly glued to libavutil. Device implementations can be migrated to native code at any later time.
+
+### Code Burden
+
+This adds a number of new types to libobs, which can be seen as not ideal in context of the codebase, but I believe the advantages of streamlining this system far outweigh the added code. Code which condensed many sequential operations like DMA and encode will now be logically separated into their own places, improving readability and understandability. Massive quantities of duplicated code will be able to be removed.
 
 # Additional Information
 
